@@ -233,9 +233,11 @@ if [ -z "$PGBK_DBLIST" ]; then
 fi
 
 dumped=()
+DUMP_DATE=$(date "+${PGBK_TIMESTAMP}")
 # Dump roles and tablespaces first
-info "dumping global objects"
-${PGBK_BIN}pg_dumpall $OPTS -g > $PGBK_BACKUP_DIR/pg_global_`date "+${PGBK_TIMESTAMP}"`.sql
+DUMP_FILE_PATH="${PGBK_BACKUP_DIR}/pg_global_${DUMP_DATE}.sql"
+info "dumping global objects into ${DUMP_FILE_PATH}"
+${PGBK_BIN}pg_dumpall $OPTS -g > $DUMP_FILE_PATH
 if [ $? != 0 ]; then
     error "pg_dumpall -g failed"
     out_rc=1
@@ -253,11 +255,12 @@ do
     fi
 
     # Dump and remember which db were properly dumped for purge
-    info "dumping database \"$db\""
-    if ! ${PGBK_BIN}pg_dump $OPTS $PGBK_OPTS -f $PGBK_BACKUP_DIR/${db}_`date "+${PGBK_TIMESTAMP}"`.dump $db; then
-	out_rc=1
-        rm $PGBK_BACKUP_DIR/${db}_`date "+${PGBK_TIMESTAMP}"`.dump
-	error "pg_dump of database \"$db\" failed"
+    DUMP_FILE_PATH="${PGBK_BACKUP_DIR}/${db}_${DUMP_DATE}.dump"
+    info "dumping database \"$db\" into ${DUMP_FILE_PATH}"
+    if ! ${PGBK_BIN}pg_dump $OPTS $PGBK_OPTS -f ${DUMP_FILE_PATH} $db; then
+        out_rc=1
+        rm ${DUMP_FILE_PATH}
+        error "pg_dump of database \"$db\" failed"
     else
         dumped+=( "$db" )
     fi
