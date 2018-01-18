@@ -254,6 +254,16 @@ do
 	continue
     fi
 
+    # DB creation statement & ACL
+    DUMP_FILE_PATH="${PGBK_BACKUP_DIR}/${db}_${DUMP_DATE}.createdb.sql"
+    info "dumping creation statement of database \"$db\" into ${DUMP_FILE_PATH}"
+    ${PGBK_BIN}pg_dumpacl $OPTS -d $db -f ${DUMP_FILE_PATH}
+    rc=$?
+    if [ $rc != 0 ]; then
+        out_rc=1
+        error "pg_dumpacl of database \"$db\" failed"
+    fi
+
     # Dump and remember which db were properly dumped for purge
     DUMP_FILE_PATH="${PGBK_BACKUP_DIR}/${db}_${DUMP_DATE}.dump"
     info "dumping database \"$db\" into ${DUMP_FILE_PATH}"
